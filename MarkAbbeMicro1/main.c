@@ -10,7 +10,6 @@ struct Item {
     float price;
 };
 
-// Function to trim leading and trailing whitespace and newlines from a string
 void trim(char *str) {
     int len = strlen(str);
     while (len > 0 && (str[len - 1] == ' ' || str[len - 1] == '\n' || str[len - 1] == '\r')) {
@@ -49,7 +48,6 @@ int main() {
         scanf("%d", &numSlots);
     }
 
-    // Consume the newline character in the input buffer
     getchar();
 
     struct Item shelf[MAX_SHELVES][MAX_SLOTS];
@@ -68,10 +66,8 @@ int main() {
         printf("Enter an item or 'done': ");
         fgets(input, sizeof(input), stdin);
 
-        // Trim leading and trailing whitespace and newlines
         trim(input);
 
-        // Check for 'done'
         if (strcmp(input, "done") == 0) {
             break;
         }
@@ -100,6 +96,7 @@ int main() {
         printf("Enter the shelf and slot for the item you want to retrieve (e.g., 1 2): ");
         if (scanf("%d %d", &shelfIndex, &slotIndex) != 2) {
             printf("Invalid input format. Please use: <shelf> <slot>\n");
+            while (getchar() != '\n');
             continue;
         }
 
@@ -119,10 +116,14 @@ int main() {
         printf("Enter 'done' to exit or 'continue' to search for another item: ");
         char choice[10];
         scanf("%9s", choice);
+
+        while (getchar() != '\n');
+
         if (strcmp(choice, "done") == 0) {
             break;
         }
     }
+
 
     return 0;
 }
