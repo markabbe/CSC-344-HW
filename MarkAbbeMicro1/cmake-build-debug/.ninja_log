@@ -1,0 +1,9 @@
+# ninja log v5
+0	79	7162597803496862	CMakeFiles/MarkAbbeMicro1.dir/main.c.obj	18b18e3cc3e4f141
+80	185	7162597804515282	MarkAbbeMicro1.exe	bc98ca32fa833748
+2	68	7162601905881568	CMakeFiles/MarkAbbeMicro1.dir/main.c.obj	18b18e3cc3e4f141
+68	152	7162601906691603	MarkAbbeMicro1.exe	bc98ca32fa833748
+1	69	7162607737931847	CMakeFiles/MarkAbbeMicro1.dir/main.c.obj	18b18e3cc3e4f141
+70	151	7162607738718325	MarkAbbeMicro1.exe	bc98ca32fa833748
+1	71	7162611824035352	CMakeFiles/MarkAbbeMicro1.dir/main.c.obj	18b18e3cc3e4f141
+72	154	7162611824834964	MarkAbbeMicro1.exe	bc98ca32fa833748
