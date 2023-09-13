@@ -11,9 +11,9 @@ struct TuringMachine {
     struct Cell* tape; // Pointer to the tape
     struct Cell* head; // Pointer to the current cell
     int state;         // Current state
-    int num_states;    // Total number of states
-    int start_state;   // Start state
-    int end_state;     // End state
+    int num_states;
+    int start_state;
+    int end_state;
     struct Instruction** instruction_table; // 2D array for instructions
 };
 

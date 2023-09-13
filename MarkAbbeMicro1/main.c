@@ -30,21 +30,21 @@ void trim(char *str) {
 int main() {
     int numShelves, numSlots;
 
-    printf("Enter the number of shelves: ");
+    printf("Enter the number of shelves (Max 10): ");
     scanf("%d", &numShelves);
 
     while (numShelves <= 0 || numShelves > MAX_SHELVES) {
-        printf("Invalid number of shelves. Maximum allowed is %d.\n", MAX_SHELVES);
-        printf("Enter the number of shelves: ");
+        printf("Invalid number of shelves. Maximum number allowed is %d.\n", MAX_SHELVES);
+        printf("Enter the number of shelves (Max 10): ");
         scanf("%d", &numShelves);
     }
 
-    printf("Enter the number of slots per shelf: ");
+    printf("Enter the number of slots per shelf (Max 10): ");
     scanf("%d", &numSlots);
 
     while (numSlots <= 0 || numSlots > MAX_SLOTS) {
         printf("Invalid number of slots per shelf. Maximum allowed is %d.\n", MAX_SLOTS);
-        printf("Enter the number of slots per shelf: ");
+        printf("Enter the number of slots per shelf (Max 10): ");
         scanf("%d", &numSlots);
     }
 
@@ -63,7 +63,7 @@ int main() {
 
     char input[100];
     while (1) {
-        printf("Enter an item or 'done': ");
+        printf("Enter an item or type 'done': ");
         fgets(input, sizeof(input), stdin);
 
         trim(input);
@@ -93,7 +93,7 @@ int main() {
 
     while (1) {
         int shelfIndex, slotIndex;
-        printf("Enter the shelf and slot for the item you want to retrieve (e.g., 1 2): ");
+        printf("Enter the shelf and slot for the item you want to retrieve (example, 1 2): ");
         if (scanf("%d %d", &shelfIndex, &slotIndex) != 2) {
             printf("Invalid input format. Please use: <shelf> <slot>\n");
             while (getchar() != '\n');
