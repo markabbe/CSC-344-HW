@@ -1,0 +1,3 @@
+C:/Users/marka/Documents/CSC-344-HW/UdemyStuff/UdemyStuff1/cmake-build-debug/CMakeFiles/UdemyStuff.dir
+C:/Users/marka/Documents/CSC-344-HW/UdemyStuff/UdemyStuff1/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/marka/Documents/CSC-344-HW/UdemyStuff/UdemyStuff1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
