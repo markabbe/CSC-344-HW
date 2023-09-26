@@ -2,133 +2,158 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TAPE_SIZE 1024
-#define NUM_STATES 10
+#define TAPE_CELL_BLANK 'B'
+#define TAPE_CELL_BEGIN 'A'
+#define TAPE_CELL_SIZE 100
 
-enum Direction {
-    LEFT = -1,
-    STAY = 0,
-    RIGHT = 1,
+// Define a struct for representing a tape cell
+struct Cell {
+    char value;
+    struct Cell* prev;
+    struct Cell* next;
 };
 
-struct TMInstruction {
-    int newState;
-    char writeSymbol;
-    enum Direction moveDirection;
-};
-
-struct TuringMachine {
-    char tape[TAPE_SIZE];
-    int head;
+// Define a struct for representing an instruction
+struct Instruction {
     int currentState;
-    struct TMInstruction instructions[NUM_STATES][256];
+    char readVal;
+    char writeVal;
+    char moveDirection; // 'L' for left, 'R' for right
+    int newState;
 };
 
-void initializeTuringMachine(struct TuringMachine* tm) {
-    memset(tm->tape, 'B', sizeof(tm->tape));
-    tm->head = 0;
-    tm->currentState = 0;
-}
+// Function to initialize the tape with input
+struct Cell* initializeTape(char* input) {
+    // Create a tape with 'A' as the first cell
+    struct Cell* tape = (struct Cell*)malloc(sizeof(struct Cell));
+    tape->value = TAPE_CELL_BEGIN;
+    tape->prev = NULL;
+    tape->next = NULL;
 
-void loadInstructions(struct TuringMachine* tm, const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (file == NULL) {
-        perror("Error opening file");
-        exit(1);
+    // Add input to the tape
+    struct Cell* current = tape;
+    for (int i = 0; input[i] != '\0'; i++) {
+        struct Cell* newCell = (struct Cell*)malloc(sizeof(struct Cell));
+        newCell->value = input[i];
+        newCell->prev = current;
+        newCell->next = NULL;
+        current->next = newCell;
+        current = newCell;
     }
 
-    char line[256];
-    int lineCount = 0; // Added for debugging
-    while (fgets(line, sizeof(line), file) != NULL) {
-        int fromState, toState;
-        char readSymbol, writeSymbol, move;
+    return tape;
+}
 
-        // Debugging: Print the line being processed
-        printf("Line %d: %s", ++lineCount, line);
+// Function to execute a step based on the current instruction
+void executeStep(struct Cell** tape, struct Instruction* instructions, int* currentState, int numInstructions, struct Cell** head) {
+    char currentValue = (*head)->value;
+    int i;
 
-        // Check if the line is a comment (starting with #) and skip it
-        if (line[0] == '#') {
-            continue;
-        }
+    for (i = 0; i < numInstructions; i++) {
+        if (instructions[i].currentState == *currentState && instructions[i].readVal == currentValue) {
+            // Execute the instruction
+            (*head)->value = instructions[i].writeVal;
 
-        // Attempt to parse the instruction line
-        if (sscanf(line, "(%d,%c)->(%c,%c,%d)", &fromState, &readSymbol, &writeSymbol, &move, &toState) == 5) {
-            // Ensure valid state and symbol values
-            if (fromState >= 0 && fromState < NUM_STATES && (int)readSymbol >= 0 && (int)readSymbol < 256) {
-                tm->instructions[fromState][(int)readSymbol].newState = toState;
-                tm->instructions[fromState][(int)readSymbol].writeSymbol = writeSymbol;
-
-                // Map the character direction to the enum Direction
-                if (move == 'L') {
-                    tm->instructions[fromState][(int)readSymbol].moveDirection = LEFT;
-                } else if (move == 'R') {
-                    tm->instructions[fromState][(int)readSymbol].moveDirection = RIGHT;
-                } else if (move == 'S') {
-                    tm->instructions[fromState][(int)readSymbol].moveDirection = STAY;
+            if (instructions[i].moveDirection == 'L') {
+                if ((*head)->prev == NULL) {
+                    // Create a new cell on the left if necessary
+                    struct Cell* newCell = (struct Cell*)malloc(sizeof(struct Cell));
+                    newCell->value = TAPE_CELL_BLANK;
+                    newCell->prev = NULL;
+                    newCell->next = *head;
+                    (*head)->prev = newCell;
+                    *head = newCell;
                 } else {
-                    fprintf(stderr, "Invalid move direction in line %d: %c\n", lineCount, move);
-                    exit(1);
+                    *head = (*head)->prev;
+                }
+            } else if (instructions[i].moveDirection == 'R') {
+                if ((*head)->next == NULL) {
+                    // Create a new cell on the right if necessary
+                    struct Cell* newCell = (struct Cell*)malloc(sizeof(struct Cell));
+                    newCell->value = TAPE_CELL_BLANK;
+                    newCell->prev = *head;
+                    newCell->next = NULL;
+                    (*head)->next = newCell;
+                } else {
+                    *head = (*head)->next;
                 }
             }
+
+            *currentState = instructions[i].newState;
+            break;
         }
     }
 
-    fclose(file);
-}
-
-void runTuringMachine(struct TuringMachine* tm) {
-    while (1) {
-        int state = tm->currentState;
-        char symbol = tm->tape[tm->head];
-        struct TMInstruction instruction = tm->instructions[state][(int)symbol];
-        if (instruction.newState == -1) {
-            printf("No more instructions for state %d and symbol %c. Halting.\n", state, symbol);
-            break;
-        }
-
-        tm->tape[tm->head] = instruction.writeSymbol;
-        tm->currentState = instruction.newState;
-        tm->head += instruction.moveDirection;
-
-        // Ensure tape bounds are not violated
-        if (tm->head < 0) {
-            perror("Tape out of bounds (left)");
-            exit(1);
-        } else if (tm->head >= TAPE_SIZE) {
-            perror("Tape out of bounds (right)");
-            exit(1);
-        }
-
-        // Debugging: Print the current state of the tape and head position
-        printf("State: %d, Symbol: %c, New State: %d, Write: %c, Move: %d\n", state, symbol, instruction.newState, instruction.writeSymbol, instruction.moveDirection);
-        printf("Tape: %s\n", tm->tape);
+    // If no instruction is found, halt
+    if (i == numInstructions) {
+        printf("Halt.\n");
+        exit(0);
     }
 }
 
 int main() {
-    struct TuringMachine tm;
-    initializeTuringMachine(&tm);
+    // Define the input tape and instructions here
+    char initialTape[] = "111B1111";
 
-    char input[256];
-    char filename[256];
-    printf("Enter the filename (make sure it's located in the project's root directory): ");
+    struct Instruction instructions[] = {
+            {0, 'A', 'A', 'R', 1},
+            {1, '1', '1', 'R', 1},
+            {1, 'B', '1', 'R', 2},
+            {2, '1', '1', 'R', 2},
+            {2, 'B', 'B', 'L', 3},
+            {3, '1', 'B', 'L', 4},
+            {4, '1', '1', 'L', 4},
+            {4, 'A', 'A', 'R', 5},
+    };
 
-    if (fgets(input, sizeof(input), stdin) == NULL) {
-        fprintf(stderr, "Error reading input filename\n");
-        return 1;
+    int numInstructions = sizeof(instructions) / sizeof(instructions[0]);
+    int numStates = 6; // Total number of states
+    int startState = 0;
+    int endState = 5;
+
+    // Initialize the tape
+    struct Cell* tape = initializeTape(initialTape);
+
+    // Initialize the read/write head to the leftmost cell
+    struct Cell* head = tape;
+
+    // Start executing the Turing Machine
+    int currentState = startState;
+    while (currentState != endState) {
+        // Print the current state and tape
+        printf("State %d\n", currentState);
+        struct Cell* current = tape;
+        while (current != NULL) {
+            if (current == head) {
+                printf("^");
+            } else {
+                printf(" ");
+            }
+            printf("%c", current->value);
+            current = current->next;
+        }
+        printf("\n");
+
+        // Execute a step
+        executeStep(&tape, instructions, &currentState, numInstructions, &head);
     }
 
-    input[strcspn(input, "\n")] = '\0';
+    // Print the final tape contents
+    printf("\nFinal tape contents: ");
+    struct Cell* current = tape;
+    while (current != NULL) {
+        printf("%c", current->value);
+        current = current->next;
+    }
+    printf("\n");
 
-    snprintf(filename, sizeof(filename), "../%s", input);
-
-    // Print the filename before attempting to open it
-    printf("Opening file: %s\n", filename);
-
-    loadInstructions(&tm, filename);
-    runTuringMachine(&tm);
-
-    printf("Final tape contents: %s\n", tm.tape);
+    // Free the memory used by the tape
+    current = tape;
+    while (current != NULL) {
+        struct Cell* temp = current;
+        current = current->next;
+        free(temp);
+    }
 
     return 0;
 }
