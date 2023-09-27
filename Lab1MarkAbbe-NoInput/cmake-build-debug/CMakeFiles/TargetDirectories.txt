@@ -1,0 +1,3 @@
+C:/Users/marka/Documents/CSC-344-HW/Lab1MarkAbbe-NoInput/cmake-build-debug/CMakeFiles/Lab1MarkAbbe.dir
+C:/Users/marka/Documents/CSC-344-HW/Lab1MarkAbbe-NoInput/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/marka/Documents/CSC-344-HW/Lab1MarkAbbe-NoInput/cmake-build-debug/CMakeFiles/rebuild_cache.dir
