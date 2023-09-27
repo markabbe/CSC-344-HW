@@ -55,7 +55,7 @@ void initializeTuringMachine(struct TuringMachine* tm, const char* filename) {
     fscanf(file, "%d", &numInstructions);
     tm->instructions = (struct Instruction*)malloc(numInstructions * sizeof(struct Instruction));
     for (int i = 0; i < numInstructions; i++) {
-        char buf[100]; // Buffer to read the instruction line
+        char buf[100];
         fscanf(file, "%s", buf);
         sscanf(buf, "(%d,%c)->(%c,%c,%d)",
                &tm->instructions[i].currentState,
