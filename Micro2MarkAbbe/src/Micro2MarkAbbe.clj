@@ -9,9 +9,14 @@
     #{}) ;;Else
   )
 
-;;Probably wont need (not using vectors)
-(def not_expr1 [not not :p])
-(def not_expr2 [not :q])
+(defn and-elimination [and-prop]
+  (if (and (list? and-prop)
+           (= (first and-prop) 'and)
+           (list? (second and-prop))
+           (= (first (second and-prop)) 'and)) ;;End of conditions
+    #{(second (second and-prop))} ;;Then statement
+    #{}) ;;Else
+  )
 
 (defn -main
   [& args]

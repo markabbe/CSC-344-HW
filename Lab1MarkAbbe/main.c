@@ -1,20 +1,25 @@
+//Mark Abbe
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+// Cell Struct
 typedef struct Cell {
     char value;
     struct Cell* next;
     struct Cell* previous;
 } Cell;
 
+// Instruction Struct
 typedef struct {
     char writeVal;
     char moveDirection;
     int newState;
-    int isSet; // 1 if this instruction is set, 0 otherwise
+    int isSet; // if this instruction is set, then 1, otherwise 0
 } Instruction;
 
+/* createCell function which takes a char, and two cells which are
+ * used as the previous and next cell */
 Cell* createCell(char value, Cell* prev, Cell* next) {
     Cell* cell = (Cell*)malloc(sizeof(Cell));
     cell->value = value;
@@ -25,7 +30,7 @@ Cell* createCell(char value, Cell* prev, Cell* next) {
 
 int main() {
     char filename[100];
-    printf("Enter the filename for the TM input: ");
+    printf("Enter filename (make sure the file is in the cmake-build-debug folder): ");
     scanf("%s", filename);
 
     FILE* file = fopen(filename, "r");
@@ -34,13 +39,18 @@ int main() {
         return 1;
     }
 
+    // Initialize the variables and get their value from the input file
     char initialTape[100];
     int numStates, startState, endState;
     fscanf(file, "%s\n%d\n%d\n%d\n", initialTape, &numStates, &startState, &endState);
+    printf("\n");
+    printf("Initial tape contents: %s\n\n", initialTape);
 
+    // Initialize the 2D array instructions, and set every byte of the array to 0 so
     Instruction instructions[numStates][128];
-    memset(instructions, 0, sizeof(instructions)); // Initialize with zeros
+    memset(instructions, 0, sizeof(instructions));
 
+    // While we are not at the end of the input file, get the current instruction, and append it to the instructions array
     while (!feof(file)) {
         int currentState;
         char readVal, writeVal, moveDirection;
@@ -50,7 +60,7 @@ int main() {
     }
     fclose(file);
 
-    // Debug: Print instructions
+    // Debug purposes: Print instructions
     printf("Instructions:\n");
     for (int i = 0; i < numStates; i++) {
         for (int j = 0; j < 128; j++) {
@@ -59,6 +69,8 @@ int main() {
             }
         }
     }
+
+    printf("\n");
 
     // Create the initial tape
     Cell* tape = createCell('A', NULL, NULL);
@@ -69,26 +81,35 @@ int main() {
     }
 
     // Turing Machine Execution
-    Cell* currentCell = tape; // start at the beginning
+    Cell* currentCell = tape;
     int currentState = startState;
 
-    printf("Starting Turing machine...\n");
+    printf("Starting Turing machine...\n\n");
     while (currentState != endState) {
         printf("Current state: %d, Current value: %c\n", currentState, currentCell->value);
         Instruction instr = instructions[currentState][(int)currentCell->value];
 
         if (!instr.isSet) {
+            if(currentCell->value == 'B'){
+                currentState = endState; // Transition to the final state
+                continue; // Skip other logic and move to the next instruction
+            }
             printf("Error: No instruction found for (State %d, Value %c).\n", currentState, currentCell->value);
             return 1; // Exit with error code
         }
 
+
         printf("Fetched transition: (%d, %c) -> (%c, %c, %d)\n", currentState, currentCell->value, instr.writeVal, instr.moveDirection, instr.newState);
         printf("Write %c, Move %c, New State %d\n------------\n", instr.writeVal, instr.moveDirection, instr.newState);
 
-        if (instr.writeVal == 'B' && currentCell->value == 'B' && !currentCell->next) {
-            currentCell->next = createCell('B', currentCell, NULL);
-            currentState = endState; // Transition to the final state
-            continue; // Skip other logic and move to the next iteration
+        if (instr.writeVal == 'B' && currentCell->value != 'B') {
+            currentCell->value = 'B';
+            if (!currentCell->next) {
+                currentCell->next = createCell('B', currentCell, NULL);
+            }
+            currentCell = currentCell->next;
+            currentState = instr.newState;
+            continue; // Skip other logic and move to the next instruction
         }
 
         currentCell->value = instr.writeVal;
@@ -97,14 +118,17 @@ int main() {
                 currentCell->next = createCell('B', currentCell, NULL);
             }
             currentCell = currentCell->next;
-        } else if (instr.moveDirection == 'L') {
+        }
+        else if (instr.moveDirection == 'L') {
             if (currentCell->previous) {
                 currentCell = currentCell->previous;
-            } else {
+            }
+            else {
                 printf("Error: Trying to move left at the beginning of the tape.\n");
                 return 1;
             }
-        } else {
+        }
+        else {
             printf("Error: Invalid move direction.\n");
             return 1;
         }
@@ -113,6 +137,7 @@ int main() {
     }
 
     // Print final tape contents
+    printf("\n");
     printf("Final tape contents: ");
     currentCell = tape;
     while (currentCell) {
@@ -121,7 +146,7 @@ int main() {
     }
     printf("\n");
 
-    // Clean up (deallocate memory)
+    // Clean up: deallocate memory
     while (tape) {
         Cell* temp = tape;
         tape = tape->next;
