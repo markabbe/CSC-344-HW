@@ -1,125 +1,125 @@
-(* Parser for
-   E -> T + E | T
-   T -> A * T | A
-   A -> [0-9]+ *)
-
-#load "str.cma"
-open Str;;
-
-(***** Scanner *****)
-
-type token =
-  | Tok_Num of int
-  | Tok_Sum 
-  | Tok_Mul
+(* Scanner Types *)
+type token = 
+  | Tok_Char of char 
+  | Tok_OR
+  | Tok_Q
+  | Tok_LPAREN
+  | Tok_RPAREN
   | Tok_END
-
-let re_num = Str.regexp "[0-9]+"
-let re_add = Str.regexp "+"
-let re_mul = Str.regexp "\\*"
-
-exception IllegalExpression of string
+;;
 
 let tokenize str =
-  let rec tok pos s =
-    if pos >= String.length s then
-      [Tok_END]
-    else if (Str.string_match re_num s pos) then
-      let token = Str.matched_string s in
-      (Tok_Num (int_of_string token))::(tok (pos + (String.length token)) s)
-    else if (Str.string_match re_add s pos) then
-      Tok_Sum::(tok (pos+1) s)
-    else if (Str.string_match re_mul s pos) then
-      Tok_Mul::(tok (pos+1) s)
-    else
-      raise (IllegalExpression "tokenize")
+  let len = String.length str in
+  let rec tok pos =
+    if pos >= len then [Tok_END]
+    else 
+      match str.[pos] with
+      | '|' -> Tok_OR :: tok (pos + 1)
+      | '?' -> Tok_Q :: tok (pos + 1)
+      | '(' -> Tok_LPAREN :: tok (pos + 1)
+      | ')' -> Tok_RPAREN :: tok (pos + 1)
+      | c -> (Tok_Char c) :: tok (pos + 1)
   in
-  tok 0 str
+  tok 0
+;;
 
-(***** Parser *****)
-
-type exp = 
-  | Num of int
-  | Sum of exp * exp
-  | Mul of exp * exp
-
-let rec a_to_str a =
-  match a with
-  | Num n -> string_of_int n 
-  | Sum (a1,a2) -> "(" ^ (a_to_str a1) ^ " + " ^ (a_to_str a2) ^ ")"
-  | Mul (a1,a2) -> "(" ^ (a_to_str a1) ^ " * " ^ (a_to_str a2) ^ ")"
+(* AST Types *)
+type re = 
+  | C of char
+  | Concat of re * re
+  | Optional of re
+  | Alternation of re * re
 ;;
 
 let tok_list = ref []
 
-exception ParseError of string
-
 let lookahead () =
   match !tok_list with
-  | [] -> raise (ParseError "no tokens")
+  | [] -> failwith "no tokens"
   | (h::t) -> h
 
-let match_tok a =
+let consume () =
   match !tok_list with
-  | (h::t) when a = h -> tok_list := t
-  | _ -> raise (ParseError "bad match")
+  | [] -> failwith "no tokens to consume"
+  | (h::t) -> tok_list := t
 
 let rec parse_E () =
-  let t1 = parse_T () in
-  let t = lookahead () in
-  match t with
-  | Tok_Sum ->
-    match_tok Tok_Sum;
-    let t2 = parse_E () in
-    Sum(t1,t2)
-  | _ -> t1
+  let t = parse_T () in
+  match lookahead () with
+  | Tok_OR -> 
+    consume (); 
+    let e = parse_E () in
+    Alternation(t, e)
+  | _ -> t
 
 and parse_T () =
-  let a1 = parse_A () in
-  let t = lookahead () in
-  match t with
-  | Tok_Mul ->
-    match_tok Tok_Mul;
-    let a2 = parse_T () in
-    Mul(a1, a2)
-  | _ -> a1
+  let f = parse_F () in
+  match lookahead () with
+  | Tok_Char _ | Tok_LPAREN -> 
+    let t = parse_T () in
+    Concat(f, t)
+  | _ -> f
+
+and parse_F () =
+  let a = parse_A () in
+  match lookahead () with
+  | Tok_Q -> 
+    consume (); 
+    Optional(a)
+  | _ -> a
 
 and parse_A () =
-  let t = lookahead () in
-  match t with
-  | Tok_Num n ->
-    let _ = match_tok (Tok_Num n) in
-    Num n
-  | _ -> raise (ParseError "parse_A")
+  match lookahead () with
+  | Tok_LPAREN -> 
+    consume (); 
+    let e = parse_E () in
+    (match lookahead () with
+     | Tok_RPAREN -> consume (); e
+     | _ -> failwith "Expected closing parenthesis")
+  | Tok_Char c -> 
+    consume (); 
+    C(c)
+  | _ -> failwith "Expected char or open parenthesis"
+;;
 
 let parse str =
-  tok_list := (tokenize str);
-  let exp = parse_E () in
-  if !tok_list <> [Tok_END] then
-    raise (ParseError "parse_E")
+  tok_list := tokenize str;
+  let res = parse_E () in
+  if lookahead () != Tok_END then failwith "Unexpected tokens"
+  else res
+;;
+
+let rec matches exp str =
+  match exp, str with
+  | C(c1), c2::_ when c1 = c2 || c1 = '.' -> [List.tl str]
+  | Concat(e1, e2), _ -> 
+      let tails = matches e1 str in
+      List.flatten (List.map (matches e2) tails)
+  | Optional(e), _ -> str :: (matches e str)
+  | Alternation(e1, e2), _ -> (matches e1 str) @ (matches e2 str)
+  | _, [] -> []
+  | _, _ -> []
+;;
+
+let full_match exp str =
+  let tails = matches exp (String.to_seq str |> List.of_seq) in
+  List.exists (fun tail -> tail = []) tails
+;;
+
+(* Interface *)
+let rec main () =
+  print_endline "pattern?";
+  let pattern = read_line () in
+  if pattern = "" then exit 0;
+  let ast = parse pattern in
+  input_strings ast
+
+and input_strings ast =
+  print_endline "string?";
+  let str = read_line () in
+  if str = "" then main ()
   else
-    exp
-;;
+    (if full_match ast str then print_endline "match" else print_endline "no match";
+    input_strings ast)
 
-(***** Interpreter ****)
-
-let rec eval a =
-  match a with
-  | Num n -> n
-  | Sum (a1,a2) -> (eval a1) + (eval a2)
-  | Mul (a1,a2) -> (eval a1) * (eval a2)
-;;
-
-let eval_str str =
-  print_string str; print_string "\n";
-  let e = parse str in
-  print_string "AST produced = " ;
-  print_endline (a_to_str e) ;
-  let v = eval e in
-  print_string "Value of AST = " ;
-  print_int v ;
-  print_endline "";
-  v
-;;
-
-eval_str "1+2*3+4*5"
+let () = main ()
