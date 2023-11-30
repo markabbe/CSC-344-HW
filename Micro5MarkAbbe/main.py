@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 def count_lines_in_directory(directory):
     # Check if the directory exists
@@ -19,3 +20,9 @@ def count_lines_in_directory(directory):
             # Extract the line count from the command output
             line_count = result.stdout.split()[0]
             print(f"{filename}: {line_count} lines")
+
+# Check if a directory argument is provided
+if len(sys.argv) != 2:
+    print("Usage: python3 main.py <directory>")
+else:
+    count_lines_in_directory(sys.argv[1])
