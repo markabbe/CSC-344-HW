@@ -40,7 +40,7 @@ def create_html_summary(directory):
 
 
 def process_directories():
-    parent_directory = os.path.join(os.getcwd(), '..')
+    parent_directory = os.path.join(os.getcwd(), '../..')
 
     for directory in os.listdir(parent_directory):
         dir_path = os.path.join(parent_directory, directory)
