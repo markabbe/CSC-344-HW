@@ -1,6 +1,8 @@
 import os
+import subprocess
 import re
 import shutil
+import tarfile
 from collections import defaultdict
 
 def clear_pycache(script_path):
@@ -61,6 +63,21 @@ def create_index_html(parent_directory, assignments):
         file.write(index_content)
         print(f"Created index at {index_file_path}")
 
+def filter_tar(tarinfo):
+    filename = tarinfo.name
+    if filename.endswith(('.c', '.clj', '.ml', '.lp', '.py', '.html')):
+        return tarinfo
+    return None
+
+def create_tar_gz(parent_directory, assignments, output_filename='assignment_sources.tar.gz'):
+    with tarfile.open(output_filename, "w:gz") as tar:
+        for assignment in assignments.keys():
+            assignment_path = os.path.join(parent_directory, assignment)
+            tar.add(assignment_path, arcname=assignment, filter=filter_tar)
+        index_path = os.path.join(parent_directory, 'index.html')
+        tar.add(index_path, arcname='index.html')
+        print(f"Created archive at {output_filename}")
+
 def process_directories(parent_directory):
     assignments = {
         'Lab1MarkAbbe': 'summary_a1.html',
@@ -82,3 +99,12 @@ script_location = os.getcwd()
 parent_directory = os.path.abspath(os.path.join(script_location, '..'))
 print(f"Script started. Parent directory: {parent_directory}")
 process_directories(parent_directory)
+
+# Create a tar.gz archive with all the sources and HTML files after processing
+create_tar_gz(parent_directory, {
+    'Lab1MarkAbbe': 'summary_a1.html',
+    'Micro2MarkAbbe': 'summary_a2.html',
+    'Lab3MarkAbbe': 'summary_a3.html',
+    'Lab4MarkAbbe': 'summary_a4.html',
+    'Micro5MarkAbbe': 'summary_a5.html'
+})
