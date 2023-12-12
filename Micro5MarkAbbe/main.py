@@ -23,10 +23,15 @@ def extract_identifiers(file_path):
     return list(identifiers)
 
 
-def create_html_summary(directory, summary_name):
+def create_html_summary(directory, summary_name, file_name=None):
     summary = defaultdict(list)
-    for filename in os.listdir(directory):
-        file_path = os.path.join(directory, filename)
+    if file_name:
+        file_list = [file_name]
+    else:
+        file_list = os.listdir(directory)
+
+    for filename in file_list:
+        file_path = os.path.join(directory, filename) if not file_name else filename
         if os.path.isfile(file_path) and file_path.endswith(('.c', '.clj', '.ml', '.lp', '.py')):
             result = subprocess.run(['wc', '-l', file_path], capture_output=True, text=True)
             line_count = result.stdout.split()[0]
@@ -53,13 +58,17 @@ def process_directories(parent_directory):
         'Lab1MarkAbbe': 'summary_a1.html',
         'Micro2MarkAbbe': 'summary_a2.html',
         'Lab3MarkAbbe': 'summary_a3.html',
-        'Micro5MarkAbbe': 'summary_a5.html'
+        'Micro5MarkAbbe': 'summary_a5.html',
+        'Lab4MarkAbbe.lp': 'summary_a4.html'
     }
     for assignment, summary_name in assignments.items():
-        dir_path = os.path.join(parent_directory, assignment)
-        if os.path.isdir(dir_path) or os.path.isfile(dir_path):
-            create_html_summary(dir_path if os.path.isdir(dir_path) else parent_directory, summary_name)
-            print(f"Processed directory {dir_path}")
+        path = os.path.join(parent_directory, assignment)
+        if os.path.isdir(path):
+            create_html_summary(path, summary_name)
+        elif os.path.isfile(path):
+            # For Lab4MarkAbbe.lp, we want to create the summary in the parent directory
+            create_html_summary(parent_directory, summary_name, file_name=path)
+        print(f"Processed {assignment}")
 
 
 # Clear the __pycache__ directory to avoid any caching issues
