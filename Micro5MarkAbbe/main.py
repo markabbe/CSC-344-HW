@@ -1,5 +1,4 @@
 import os
-import subprocess
 import re
 import shutil
 from collections import defaultdict
@@ -47,19 +46,35 @@ def create_html_summary(directory, summary_name, file_name=None):
         file.write(html_content)
         print(f"Created summary at {summary_file_path}")
 
+def create_index_html(parent_directory, assignments):
+    index_content = "<html><head><title>Index of Summaries</title></head><body>"
+    index_content += "<h1>Index of Assignment Summaries</h1><ul>"
+
+    for assignment, summary_name in assignments.items():
+        summary_path = os.path.join(assignment, summary_name)
+        index_content += f'<li><a href="{summary_path}">{summary_name}</a></li>'
+
+    index_content += "</ul></body></html>"
+
+    index_file_path = os.path.join(parent_directory, 'index.html')
+    with open(index_file_path, 'w', encoding='utf-8') as file:
+        file.write(index_content)
+        print(f"Created index at {index_file_path}")
+
 def process_directories(parent_directory):
     assignments = {
         'Lab1MarkAbbe': 'summary_a1.html',
         'Micro2MarkAbbe': 'summary_a2.html',
         'Lab3MarkAbbe': 'summary_a3.html',
-        'Lab4MarkAbbe': 'summary_a4.html',  # Changed from 'Lab4MarkAbbe.lp' to 'Lab4MarkAbbe'
+        'Lab4MarkAbbe': 'summary_a4.html',
         'Micro5MarkAbbe': 'summary_a5.html'
     }
     for assignment, summary_name in assignments.items():
         path = os.path.join(parent_directory, assignment)
-        create_html_summary(path, summary_name)  # Since now all are directories, no need to check if it's a file or directory
+        create_html_summary(path, summary_name)
         print(f"Processed {assignment}")
 
+    create_index_html(parent_directory, assignments)
 
 clear_pycache(os.getcwd())
 
