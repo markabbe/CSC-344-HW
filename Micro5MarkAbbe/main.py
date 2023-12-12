@@ -18,7 +18,7 @@ def extract_identifiers(file_path):
             identifiers.update(possible_identifiers)
     return list(identifiers)
 
-def create_html_summary(directory):
+def create_html_summary(directory, summary_name):
     summary = defaultdict(list)
     for filename in os.listdir(directory):
         file_path = os.path.join(directory, filename)
@@ -34,17 +34,24 @@ def create_html_summary(directory):
             html_content += f"<li>{identifier}</li>"
         html_content += "</ul>"
     html_content += "</body></html>"
-    summary_file_path = os.path.join(directory, 'summary.html')
+    summary_file_path = os.path.join(directory, summary_name)
     with open(summary_file_path, 'w') as file:
         file.write(html_content)
 
 def process_directories(parent_directory):
-    allowed_dirs = {'Lab1MarkAbbe', 'Micro2MarkAbbe', 'Lab3MarkAbbe', 'Micro5MarkAbbe'}
-    for dirname in os.listdir(parent_directory):
-        if dirname in allowed_dirs:
-            dir_path = os.path.join(parent_directory, dirname)
-            if os.path.isdir(dir_path):
-                create_html_summary(dir_path)
+    assignments = {
+        'Lab1MarkAbbe': 'summary_a1.html',
+        'Micro2MarkAbbe': 'summary_a2.html',
+        'Lab3MarkAbbe': 'summary_a3.html',
+        'Lab4MarkAbbe.lp': 'summary_a4.html',  # This is a file, handle separately
+        'Micro5MarkAbbe': 'summary_a5.html'
+    }
+    for assignment, summary_name in assignments.items():
+        dir_path = os.path.join(parent_directory, assignment)
+        if os.path.isdir(dir_path):
+            create_html_summary(dir_path, summary_name)
+        elif os.path.isfile(dir_path):  # If it's a file and not a directory
+            create_html_summary(parent_directory, summary_name)
 
 # Clear the __pycache__ directory to avoid any caching issues
 clear_pycache(os.getcwd())
