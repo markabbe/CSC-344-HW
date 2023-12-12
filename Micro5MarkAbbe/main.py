@@ -22,31 +22,40 @@ def extract_identifiers(file_path):
     print(f"Extracted identifiers from {file_path}")
     return list(identifiers)
 
+
 def create_html_summary(directory, summary_name, file_name=None):
     summary = defaultdict(list)
-    identifiers = set()
-    file_list = [file_name] if file_name else os.listdir(directory)
+    if file_name:
+        file_list = [file_name]
+    else:
+        file_list = os.listdir(directory)
 
-    html_content = f"<html><head><title>Summary</title></head><body><h1>Summary of {os.path.basename(directory)}</h1>"
+    html_content = f"<html><head><title>Summary of {os.path.basename(directory)}</title></head><body><h1>Summary of {os.path.basename(directory)}</h1><ul>"
+
     for filename in file_list:
         file_path = os.path.join(directory, filename) if not file_name else filename
         if os.path.isfile(file_path) and file_path.endswith(('.c', '.clj', '.ml', '.lp', '.py')):
-            with open(file_path, 'r') as file:
-                content = file.read()
-                line_count = content.count('\n') + 1
-                identifiers.update(extract_identifiers(content))
-            relative_path = os.path.relpath(file_path, start=directory)
-            html_content += f"<h2><a href=\"{relative_path}\">{filename}</a> ({line_count} lines)</h2>"
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
+                    content = file.read()
+                    line_count = content.count('\n') + 1
+                    identifiers = extract_identifiers(content)
+                summary[filename] = {'lines': line_count, 'identifiers': sorted(identifiers)}
+                html_content += f"<li><a href=\"{filename}\">{filename}</a> ({line_count} lines)</li>"
+            except Exception as e:
+                print(f"Error processing file {file_path}: {e}")
 
-    html_content += "<h2>Identifiers:</h2><ul>"
-    for identifier in sorted(identifiers):
+    html_content += "</ul><h2>Identifiers:</h2><ul>"
+    all_identifiers = sorted(set([identifier for details in summary.values() for identifier in details['identifiers']]))
+    for identifier in all_identifiers:
         html_content += f"<li>{identifier}</li>"
     html_content += "</ul></body></html>"
 
     summary_file_path = os.path.join(directory, summary_name)
-    with open(summary_file_path, 'w') as file:
+    with open(summary_file_path, 'w', encoding='utf-8') as file:
         file.write(html_content)
         print(f"Created summary at {summary_file_path}")
+
 
 def process_directories(parent_directory):
     assignments = {
