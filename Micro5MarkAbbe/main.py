@@ -1,7 +1,13 @@
 import os
 import subprocess
 import re
+import shutil
 from collections import defaultdict
+
+def clear_pycache(script_path):
+    pycache_path = os.path.join(script_path, '__pycache__')
+    if os.path.exists(pycache_path) and os.path.isdir(pycache_path):
+        shutil.rmtree(pycache_path)
 
 def extract_identifiers(file_path):
     identifiers = set()
@@ -14,17 +20,13 @@ def extract_identifiers(file_path):
 
 def create_html_summary(directory):
     summary = defaultdict(list)
-
     for filename in os.listdir(directory):
         file_path = os.path.join(directory, filename)
-
         if os.path.isfile(file_path) and file_path.endswith(('.c', '.clj', '.ml', '.lp', '.py')):
             result = subprocess.run(['wc', '-l', file_path], capture_output=True, text=True)
             line_count = result.stdout.split()[0]
-
             identifiers = extract_identifiers(file_path)
             summary[filename] = {'lines': line_count, 'identifiers': identifiers}
-
     html_content = "<html><body><h1>Summary of " + os.path.basename(directory) + "</h1>"
     for file, details in summary.items():
         html_content += f"<h2>{file} ({details['lines']} lines)</h2><ul>"
@@ -32,19 +34,21 @@ def create_html_summary(directory):
             html_content += f"<li>{identifier}</li>"
         html_content += "</ul>"
     html_content += "</body></html>"
-
     summary_file_path = os.path.join(directory, 'summary.html')
     with open(summary_file_path, 'w') as file:
         file.write(html_content)
 
 def process_directories(parent_directory):
     allowed_dirs = {'Lab1MarkAbbe', 'Micro2MarkAbbe', 'Lab3MarkAbbe', 'Micro5MarkAbbe'}
-    for dirname in allowed_dirs:
-        dir_path = os.path.join(parent_directory, dirname)
-        if os.path.isdir(dir_path):
-            create_html_summary(dir_path)
+    for dirname in os.listdir(parent_directory):
+        if dirname in allowed_dirs:
+            dir_path = os.path.join(parent_directory, dirname)
+            if os.path.isdir(dir_path):
+                create_html_summary(dir_path)
 
-# The script is located in Micro5MarkAbbe, so we traverse back up two levels to reach the CSC-344-HW directory
-script_location = os.getcwd()
-parent_directory = os.path.abspath(os.path.join(script_location, '../..'))
+# Clear the __pycache__ directory to avoid any caching issues
+clear_pycache(os.getcwd())
+
+# Assuming the script is located in Micro5MarkAbbe, so we traverse back up two levels to reach the CSC-344-HW directory
+parent_directory = os.path.abspath(os.path.join(os.getcwd(), '../..'))
 process_directories(parent_directory)
