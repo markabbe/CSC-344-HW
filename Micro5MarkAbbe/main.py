@@ -1,5 +1,4 @@
 import os
-import subprocess
 import re
 import shutil
 import tarfile
@@ -63,19 +62,18 @@ def create_index_html(parent_directory, assignments):
         file.write(index_content)
         print(f"Created index at {index_file_path}")
 
-def filter_tar(tarinfo):
-    filename = tarinfo.name
-    if filename.endswith(('.c', '.clj', '.ml', '.lp', '.py', '.html')):
-        return tarinfo
-    return None
-
 def create_tar_gz(parent_directory, assignments, output_filename='assignment_sources.tar.gz'):
     with tarfile.open(output_filename, "w:gz") as tar:
-        for assignment in assignments.keys():
+        for assignment, summary_name in assignments.items():
             assignment_path = os.path.join(parent_directory, assignment)
-            tar.add(assignment_path, arcname=assignment, filter=filter_tar)
+            for root, dirs, files in os.walk(assignment_path):
+                for file in files:
+                    if file.endswith(('.c', '.clj', '.ml', '.lp', '.py', summary_name)):
+                        file_path = os.path.join(root, file)
+                        tar.add(file_path, arcname=os.path.relpath(file_path, parent_directory))
+
         index_path = os.path.join(parent_directory, 'index.html')
-        tar.add(index_path, arcname='index.html')
+        tar.add(index_path, arcname=os.path.relpath(index_path, parent_directory))
         print(f"Created archive at {output_filename}")
 
 def process_directories(parent_directory):
@@ -100,7 +98,6 @@ parent_directory = os.path.abspath(os.path.join(script_location, '..'))
 print(f"Script started. Parent directory: {parent_directory}")
 process_directories(parent_directory)
 
-# Create a tar.gz archive with all the sources and HTML files after processing
 create_tar_gz(parent_directory, {
     'Lab1MarkAbbe': 'summary_a1.html',
     'Micro2MarkAbbe': 'summary_a2.html',
