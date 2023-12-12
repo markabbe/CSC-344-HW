@@ -33,15 +33,18 @@ def create_html_summary(directory):
         html_content += "</ul>"
     html_content += "</body></html>"
 
-    with open(os.path.join(directory, 'summary.html'), 'w') as file:
+    summary_file_path = os.path.join(directory, 'summary.html')
+    with open(summary_file_path, 'w') as file:
         file.write(html_content)
 
 def process_directories(parent_directory):
-    for directory in os.listdir(parent_directory):
-        dir_path = os.path.join(parent_directory, directory)
+    allowed_dirs = {'Lab1MarkAbbe', 'Micro2MarkAbbe', 'Lab3MarkAbbe', 'Micro5MarkAbbe'}
+    for dirname in allowed_dirs:
+        dir_path = os.path.join(parent_directory, dirname)
         if os.path.isdir(dir_path):
             create_html_summary(dir_path)
-            process_directories(dir_path)  # Recursively process each subdirectory
 
-# Call this function with the parent directory path
-process_directories(os.path.join(os.getcwd(), '../..'))
+# The script is located in Micro5MarkAbbe, so we traverse back up two levels to reach the CSC-344-HW directory
+script_location = os.getcwd()
+parent_directory = os.path.abspath(os.path.join(script_location, '../..'))
+process_directories(parent_directory)
