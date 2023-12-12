@@ -1,3 +1,0 @@
-C:/Users/marka/Documents/CSC-344-HW/MarkAbbeMicro1/cmake-build-debug/CMakeFiles/MarkAbbeMicro1.dir
-C:/Users/marka/Documents/CSC-344-HW/MarkAbbeMicro1/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/marka/Documents/CSC-344-HW/MarkAbbeMicro1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
