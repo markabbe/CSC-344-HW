@@ -52,16 +52,14 @@ def process_directories(parent_directory):
         'Lab1MarkAbbe': 'summary_a1.html',
         'Micro2MarkAbbe': 'summary_a2.html',
         'Lab3MarkAbbe': 'summary_a3.html',
-        'Micro5MarkAbbe': 'summary_a5.html',
-        'Lab4MarkAbbe.lp': 'summary_a4.html'
+        'Lab4MarkAbbe': 'summary_a4.html',  # Changed from 'Lab4MarkAbbe.lp' to 'Lab4MarkAbbe'
+        'Micro5MarkAbbe': 'summary_a5.html'
     }
     for assignment, summary_name in assignments.items():
         path = os.path.join(parent_directory, assignment)
-        if os.path.isdir(path):
-            create_html_summary(path, summary_name)
-        elif os.path.isfile(path):
-            create_html_summary(parent_directory, summary_name, file_name=path)
+        create_html_summary(path, summary_name)  # Since now all are directories, no need to check if it's a file or directory
         print(f"Processed {assignment}")
+
 
 clear_pycache(os.getcwd())
 
