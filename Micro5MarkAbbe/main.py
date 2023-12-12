@@ -8,20 +8,13 @@ def extract_identifiers(file_path):
     identifiers = set()
     with open(file_path, 'r') as file:
         for line in file:
-            # Simple filter for comments and string literals
-            # This is very basic and might not cover all cases
             line = re.sub(r'".*?"|\'.*?\'|#.*|//.*|/\*.*?\*/', '', line)
-            # Extracting words that might be identifiers
             possible_identifiers = re.findall(r'\b[_a-zA-Z][_a-zA-Z0-9]*\b', line)
             identifiers.update(possible_identifiers)
     return list(identifiers)
 
 
 def create_html_summary(directory):
-    if not os.path.isdir(directory):
-        print(f"Directory '{directory}' not found.")
-        return
-
     summary = defaultdict(list)
 
     for filename in os.listdir(directory):
@@ -44,3 +37,15 @@ def create_html_summary(directory):
 
     with open(os.path.join(directory, 'summary.html'), 'w') as file:
         file.write(html_content)
+
+
+def process_directories():
+    parent_directory = os.path.join(os.getcwd(), '..')
+
+    for directory in os.listdir(parent_directory):
+        dir_path = os.path.join(parent_directory, directory)
+        if os.path.isdir(dir_path):
+            create_html_summary(dir_path)
+
+
+process_directories()
