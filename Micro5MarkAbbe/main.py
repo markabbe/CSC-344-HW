@@ -4,29 +4,40 @@ import re
 import shutil
 from collections import defaultdict
 
+
 def clear_pycache(script_path):
     pycache_path = os.path.join(script_path, '__pycache__')
     if os.path.exists(pycache_path) and os.path.isdir(pycache_path):
         shutil.rmtree(pycache_path)
         print(f"Cleared pycache at {pycache_path}")
 
-def extract_identifiers(file_content):
-    file_content = re.sub(r'".*?"|\'.*?\'|#.*|//.*|/\*.*?\*/', '', file_content)
-    identifiers = re.findall(r'\b[_a-zA-Z][_a-zA-Z0-9]*\b', file_content)
-    return set(identifiers)
+
+def extract_identifiers(file_path):
+    identifiers = set()
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = re.sub(r'".*?"|\'.*?\'|#.*|//.*|/\*.*?\*/', '', line)
+            possible_identifiers = re.findall(r'\b[_a-zA-Z][_a-zA-Z0-9]*\b', line)
+            identifiers.update(possible_identifiers)
+    print(f"Extracted identifiers from {file_path}")
+    return list(identifiers)
 
 def create_html_summary(directory, summary_name, file_name=None):
+    summary = defaultdict(list)
     identifiers = set()
-    file_list = [file_name] if file_name else [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
-    html_content = f"<html><head><title>Summary of {os.path.basename(directory)}</title></head><body><h1>Summary of {os.path.basename(directory)}</h1>"
+    file_list = [file_name] if file_name else os.listdir(directory)
+
+    html_content = f"<html><head><title>Summary</title></head><body><h1>Summary of {os.path.basename(directory)}</h1>"
     for filename in file_list:
         file_path = os.path.join(directory, filename) if not file_name else filename
-        with open(file_path, 'r') as file:
-            content = file.read()
-            line_count = content.count('\n') + 1
-            identifiers.update(extract_identifiers(content))
-        relative_path = os.path.relpath(file_path, start=directory)
-        html_content += f"<h2><a href=\"{relative_path}\">{filename}</a> ({line_count} lines)</h2>"
+        if os.path.isfile(file_path) and file_path.endswith(('.c', '.clj', '.ml', '.lp', '.py')):
+            with open(file_path, 'r') as file:
+                content = file.read()
+                line_count = content.count('\n') + 1
+                identifiers.update(extract_identifiers(content))
+            relative_path = os.path.relpath(file_path, start=directory)
+            html_content += f"<h2><a href=\"{relative_path}\">{filename}</a> ({line_count} lines)</h2>"
+
     html_content += "<h2>Identifiers:</h2><ul>"
     for identifier in sorted(identifiers):
         html_content += f"<li>{identifier}</li>"
@@ -47,9 +58,13 @@ def process_directories(parent_directory):
     }
     for assignment, summary_name in assignments.items():
         path = os.path.join(parent_directory, assignment)
-        if os.path.isdir(path) or os.path.isfile(path):
-            create_html_summary(path if os.path.isdir(path) else parent_directory, summary_name, file_name=None if os.path.isdir(path) else assignment)
-            print(f"Processed {assignment}")
+        if os.path.isdir(path):
+            create_html_summary(path, summary_name)
+        elif os.path.isfile(path):
+            # For Lab4MarkAbbe.lp, we want to create the summary in the parent directory
+            create_html_summary(parent_directory, summary_name, file_name=path)
+        print(f"Processed {assignment}")
+
 
 # Clear the __pycache__ directory to avoid any caching issues
 clear_pycache(os.getcwd())
