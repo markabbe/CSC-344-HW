@@ -4,7 +4,7 @@ import re
 import shutil
 from collections import defaultdict
 
-print("Script started.")
+
 def clear_pycache(script_path):
     pycache_path = os.path.join(script_path, '__pycache__')
     if os.path.exists(pycache_path) and os.path.isdir(pycache_path):
@@ -65,7 +65,8 @@ def process_directories(parent_directory):
 # Clear the __pycache__ directory to avoid any caching issues
 clear_pycache(os.getcwd())
 
-# Assuming the script is located in Micro5MarkAbbe, so we traverse back up two levels to reach the CSC-344-HW directory
-parent_directory = os.path.abspath(os.path.join(os.getcwd(), '../..'))
-print(f"Parent directory: {parent_directory}")
+# Assuming the script is located in Micro5MarkAbbe, so we traverse back up one level to reach the CSC-344-HW directory.
+script_location = os.getcwd()
+parent_directory = os.path.abspath(os.path.join(script_location, '..'))
+print(f"Script started. Parent directory: {parent_directory}")
 process_directories(parent_directory)
