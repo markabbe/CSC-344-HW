@@ -3,7 +3,6 @@ import subprocess
 import re
 from collections import defaultdict
 
-
 def extract_identifiers(file_path):
     identifiers = set()
     with open(file_path, 'r') as file:
@@ -12,7 +11,6 @@ def extract_identifiers(file_path):
             possible_identifiers = re.findall(r'\b[_a-zA-Z][_a-zA-Z0-9]*\b', line)
             identifiers.update(possible_identifiers)
     return list(identifiers)
-
 
 def create_html_summary(directory):
     summary = defaultdict(list)
@@ -38,14 +36,12 @@ def create_html_summary(directory):
     with open(os.path.join(directory, 'summary.html'), 'w') as file:
         file.write(html_content)
 
-
-def process_directories():
-    parent_directory = os.path.join(os.getcwd(), '../..')
-
+def process_directories(parent_directory):
     for directory in os.listdir(parent_directory):
         dir_path = os.path.join(parent_directory, directory)
         if os.path.isdir(dir_path):
             create_html_summary(dir_path)
+            process_directories(dir_path)  # Recursively process each subdirectory
 
-
-process_directories()
+# Call this function with the parent directory path
+process_directories(os.path.join(os.getcwd(), '../..'))
