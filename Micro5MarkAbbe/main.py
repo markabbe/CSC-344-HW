@@ -4,7 +4,7 @@ import re
 import shutil
 from collections import defaultdict
 
-
+print("Script started.")
 def clear_pycache(script_path):
     pycache_path = os.path.join(script_path, '__pycache__')
     if os.path.exists(pycache_path) and os.path.isdir(pycache_path):
