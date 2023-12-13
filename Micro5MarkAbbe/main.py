@@ -2,9 +2,10 @@ import os
 import re
 import shutil
 import tarfile
+import subprocess
 from collections import defaultdict
 
-
+tar_gz_path = 'assignment_sources.tar.gz'
 def clear_pycache(script_path):
     pycache_path = os.path.join(script_path, '__pycache__')
     if os.path.exists(pycache_path) and os.path.isdir(pycache_path):
@@ -98,6 +99,10 @@ def process_directories(parent_directory):
         print(f"Processed {assignment}")
     create_index_html(parent_directory, assignments)
 
+def prompt_and_send_email(tar_gz_path):
+    email_address = input("Please enter the recipient's email address: ")
+    command = f'echo "Mark Abbe\'s tar.gz" | mutt -a "{tar_gz_path}" -s "Mark Abbe\'s tar.gz" -- {email_address}'
+    subprocess.run(command, shell=True, check=True)
 
 clear_pycache(os.getcwd())
 script_location = os.getcwd()
@@ -111,3 +116,5 @@ create_tar_gz(parent_directory, {
     'Lab4MarkAbbe': 'summary_a4.html',
     'Micro5MarkAbbe': 'summary_a5.html'
 })
+
+prompt_and_send_email(tar_gz_path)
